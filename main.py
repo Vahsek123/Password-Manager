@@ -1,6 +1,5 @@
 import mysql.connector as sql
 from tokens import get_token
-from tabulate import tabulate
 import PySimpleGUI as sg
 
 
@@ -49,23 +48,20 @@ def main():
             cursor.execute(rem, rem_id)
             mydb.commit()
             update_table()
-        #
-        # else:  # view current passwords
-        #     cursor.execute("SELECT * FROM password_vault")
-        #     result = cursor.fetchall()
-        #     print(tabulate(result, headers=['pass_id', 'password', 'app', 'url'], tablefmt='psql'))
-        #
-        #     # get encrypted password
-        #     pass_id = (int(input("Which password do you want to view: ")),)
-        #     get_val = "SELECT @val := password FROM password_vault WHERE pass_id = %s;"
-        #     cursor.execute(get_val, pass_id)
-        #     encrypted_pass = cursor.fetchone()
-        #
-        #     # decrypt password and print to console
-        #     get_pass = "SELECT AES_DECRYPT(%s, UNHEX(SHA2('passkey', 224)));"
-        #     cursor.execute(get_pass, encrypted_pass)
-        #     output = ''.join(cursor.fetchone())
-        #     print(output)
+        elif event == "-view-":  # view selected password
+            pos = values['vault'][0]
+            view_id = (window['vault'].Get()[pos][0],)
+
+            # get encrypted password
+            get_val = "SELECT @val := password FROM password_vault WHERE pass_id = %s;"
+            cursor.execute(get_val, view_id)
+            encrypted_pass = cursor.fetchone()
+
+            # decrypt password and print to console
+            get_pass = "SELECT AES_DECRYPT(%s, UNHEX(SHA2('passkey', 224)));"
+            cursor.execute(get_pass, encrypted_pass)
+            output = ''.join(cursor.fetchone())
+            sg.popup(output)
 
 
 if __name__ == "__main__":
@@ -85,17 +81,17 @@ if __name__ == "__main__":
         [sg.Text("Password Manager", justification='center')],
         [sg.Table(
             values=result,
-            headings=['pass_id', 'password', 'app', 'url'],
+            headings=['pass_id', 'pass', 'app', 'url'],
             justification='center',
-            col_widths=[50, 20, 20, 20],
+            def_col_width=100,
             num_rows=10,
             key='vault'
         )],
-        [sg.Button("Add"), sg.Button("Remove")],
+        [sg.Button("Add"), sg.Button("Remove"), sg.Button("View Password", key='-view-')],
     ]
     window = sg.Window("Password Manager",
                        layout=app,
-                       size=(600, 400),
+                       size=(600, 300),
                        element_justification='c')
 
     main()
