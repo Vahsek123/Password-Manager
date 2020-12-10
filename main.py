@@ -4,6 +4,21 @@ from tabulate import tabulate
 import PySimpleGUI as sg
 
 
+def add_password():
+    layout_add = [
+        [sg.Text("Password: "), sg.InputText(default_text='', key='-pass-')],
+        [sg.Text("Application: "), sg.InputText(default_text='', key='-app-')],
+        [sg.Text("URL: "), sg.InputText(default_text='', key='-url-')],
+        [sg.Button("Confirm")]
+    ]
+    window_add = sg.Window("Add Password", layout_add)
+    while True:
+        event, values = window_add.read()
+        if event == "Confirm":
+            window_add.Close()
+            return values
+
+
 def main():
 
     while True:
@@ -11,14 +26,12 @@ def main():
         if event == "Exit" or event == sg.WIN_CLOSED:
             break
         if event == "Add":  # add password
-            password = input("Enter password to store: ")
-            application = input("Enter the application this is for: ")
-            url = input("What is the url for the application: ")
+            pass_entry = add_password()
 
             # insert encrypted password into vault
             ins = "INSERT INTO password_vault(password, app, url) " \
                   "VALUES(AES_ENCRYPT(%s,UNHEX(SHA2('passkey', 224))), %s, %s)"
-            val = (password, application, url)
+            val = (pass_entry['-pass-'], pass_entry['-app-'], pass_entry['-url-'])
             cursor.execute(ins, val)
             mydb.commit()
             cursor.execute("SELECT * FROM password_vault")
