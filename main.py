@@ -19,13 +19,19 @@ def add_password():
             return values
 
 
+def update_table():
+    cursor.execute("SELECT * FROM password_vault")
+    updated_table = cursor.fetchall()
+    window['vault'].Update(values=updated_table)
+
+
 def main():
 
     while True:
         event, values = window.read()
         if event == "Exit" or event == sg.WIN_CLOSED:
             break
-        if event == "Add":  # add password
+        elif event == "Add":  # add password
             pass_entry = add_password()
 
             # insert encrypted password into vault
@@ -34,9 +40,15 @@ def main():
             val = (pass_entry['-pass-'], pass_entry['-app-'], pass_entry['-url-'])
             cursor.execute(ins, val)
             mydb.commit()
-            cursor.execute("SELECT * FROM password_vault")
-            updated_table = cursor.fetchall()
-            window.FindElement('vault').Update(values=updated_table)
+            update_table()
+        elif event == "Remove":
+            pos = values['vault'][0]
+            rem_id = (window['vault'].Get()[pos][0],)
+
+            rem = "DELETE FROM password_vault WHERE pass_id = %s"
+            cursor.execute(rem, rem_id)
+            mydb.commit()
+            update_table()
         #
         # else:  # view current passwords
         #     cursor.execute("SELECT * FROM password_vault")
